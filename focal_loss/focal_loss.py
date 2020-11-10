@@ -13,7 +13,8 @@ class FocalLoss(nn.Module):
 
     def forward(self, x, target):
         p_t = torch.where(target == 1, x, 1-x)
-        fl = - self.alpha * (1 - p_t) ** self.gamma * torch.log(p_t)
+        fl = - 1 * (1 - p_t) ** self.gamma * torch.log(p_t)
+        fl = torch.where(target == 1, fl * self.alpha, fl)
         return self._reduce(fl)
 
     def _reduce(self, x):
