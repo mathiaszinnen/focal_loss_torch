@@ -7,7 +7,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="focal_loss_torch",
-    version="0.0.7",
+    version="0.0.8",
     description="Simple pytorch implementation of focal loss",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -21,5 +21,5 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     packages=["focal_loss"],
-    install_requires=["torch"],
+    install_requires=["torch", "numpy"],
 )
