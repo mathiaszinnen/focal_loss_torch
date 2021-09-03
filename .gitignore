@@ -1,4 +1,5 @@
 .idea/
+.eggs/
 venv/
 build/
 dist/

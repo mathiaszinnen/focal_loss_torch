@@ -6,6 +6,7 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 
 setup(
+    setup_requires=['wheel'],
     name="focal_loss_torch",
     version="0.0.8",
     description="Simple pytorch implementation of focal loss",
