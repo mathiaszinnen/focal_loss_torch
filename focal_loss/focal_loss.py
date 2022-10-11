@@ -1,16 +1,23 @@
 import torch
 import torch.nn as nn
 import numpy as np
+from torch.nn.functional import one_hot
 
 
 class FocalLoss(nn.Module):
     def __init__(self, alpha=1, gamma=2, reduction: str = 'mean'):
         super().__init__()
         if reduction not in ['mean', 'none', 'sum']:
-            raise NotImplementedError('Reduction {} not implemented.'.format(reduction))
+            raise NotImplementedError(
+                'Reduction {} not implemented.'.format(reduction)
+                )
         self.reduction = reduction
         self.alpha = alpha
         self.gamma = gamma
+
+    def _process_target(self, target, num_classes: int):
+        target = target.view(-1)
+        return one_hot(target, num_classes=num_classes)
 
     def forward(self, x, target):
         eps = np.finfo(float).eps
