@@ -29,6 +29,14 @@ class FocalLoss(nn.Module):
             return x
         return x.view(-1, x.shape[-1])
 
+    def _calc_pt(
+            self, target: Tensor, x: Tensor, mask: Tensor
+            ) -> Tensor:
+        p = target * x
+        p = p.sum(dim=-1)
+        p = p * ~mask
+        return p
+
     def forward(self, x, target):
         eps = np.finfo(float).eps
         p_t = torch.where(target == 1, x, 1-x)
