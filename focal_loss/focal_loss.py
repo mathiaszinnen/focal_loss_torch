@@ -74,7 +74,7 @@ class FocalLoss(nn.Module):
         x = self._process_preds(x)
         num_classes = x.shape[-1]
         target = self._process_target(target, num_classes)
-        weights = self._get_weights(target)
+        weights = self._get_weights(target).to(x.device)
         pt = self._calc_pt(target, x, mask)
         focal = 1 - pt
         nll = -torch.log(self.eps + pt)
