@@ -28,6 +28,12 @@ class FocalLoss(nn.Module):
         self.eps = eps
         self.weights = weights
 
+    def _get_weights(self, target: Tensor) -> Tensor:
+        if self.weights is None:
+            return torch.ones(target.shape[0])
+        weights = target * self.weights
+        return weights.sum(dim=-1)
+
     def _process_target(
             self, target: Tensor, num_classes: int
             ) -> Tensor:
@@ -54,12 +60,13 @@ class FocalLoss(nn.Module):
         x = self._process_preds(x)
         num_classes = x.shape[-1]
         target = self._process_target(target, num_classes)
+        weights = self._get_weights(target)
         pt = self._calc_pt(target, x, mask)
         focal = 1 - pt
         nll = -torch.log(self.eps + pt)
         nll = nll.masked_fill(mask, 0)
-        loss = (focal ** self.gamma) * nll
-        return self._reduce(loss)
+        loss = weights * (focal ** self.gamma) * nll
+        return self._reduce(loss, mask)
 
     def _reduce(self, x: Tensor, mask: Tensor) -> Tensor:
         if self.reduction == 'mean':
