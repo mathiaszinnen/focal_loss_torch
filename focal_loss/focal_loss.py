@@ -2,13 +2,14 @@ import torch
 import torch.nn as nn
 from torch.nn.functional import one_hot
 from torch import Tensor
+from typing import Union
 
 
 class FocalLoss(nn.Module):
     def __init__(
             self,
-            alpha=1,
-            gamma=2,
+            gamma,
+            weights: Union[None, Tensor] = None,
             reduction: str = 'mean',
             ignore_index=-100,
             eps=1e-16
@@ -18,11 +19,14 @@ class FocalLoss(nn.Module):
             raise NotImplementedError(
                 'Reduction {} not implemented.'.format(reduction)
                 )
+        assert weights is None or isinstance(weights, Tensor), \
+            'weights should be of type Tensor or None, but {} given'.format(
+                type(weights))
         self.reduction = reduction
-        self.alpha = alpha
         self.gamma = gamma
         self.ignore_index = ignore_index
         self.eps = eps
+        self.weights = weights
 
     def _process_target(
             self, target: Tensor, num_classes: int
