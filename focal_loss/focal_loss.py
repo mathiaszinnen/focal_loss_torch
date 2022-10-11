@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 from torch.nn.functional import one_hot
+from torch import Tensor
 
 
 class FocalLoss(nn.Module):
@@ -15,9 +16,18 @@ class FocalLoss(nn.Module):
         self.alpha = alpha
         self.gamma = gamma
 
-    def _process_target(self, target, num_classes: int):
+    def _process_target(
+            self, target: Tensor, num_classes: int
+            ) -> Tensor:
         target = target.view(-1)
         return one_hot(target, num_classes=num_classes)
+
+    def _process_preds(self, x: Tensor) -> Tensor:
+        if x.dim() == 1:
+            x = torch.vstack([1 - x, x])
+            x = x.permute(1, 0)
+            return x
+        return x.view(-1, x.shape[-1])
 
     def forward(self, x, target):
         eps = np.finfo(float).eps
