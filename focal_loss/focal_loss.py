@@ -6,6 +6,20 @@ from typing import Union
 
 
 class FocalLoss(nn.Module):
+    """Computes the focal loss between input and target
+    as described here https://arxiv.org/abs/1708.02002v2
+
+    Args:
+        gamma (float):  The focal loss focusing parameter.
+        weights (Union[None, Tensor]): Rescaling weight given to each class.
+        If given, has to be a Tensor of size C. optional.
+        reduction (str): Specifies the reduction to apply to the output.
+        it should be one of the following 'none', 'mean', or 'sum'.
+        default 'mean'.
+        ignore_index (int): Specifies a target value that is ignored and
+        does not contribute to the input gradient. optional.
+        eps (float): smoothing to prevent log from returning inf.
+    """
     def __init__(
             self,
             gamma,
