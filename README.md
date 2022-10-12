@@ -11,9 +11,16 @@ Focal loss is now accessible in your pytorch environment:
 ```python
 from focal_loss.focal_loss import FocalLoss
 
-...
-criterion = FocalLoss(alpha=2, gamma=5)
-...
+# Withoout class weights
+criterion = FocalLoss(gamma=0.7)
+
+# with weights 
+# The weights parameter is similar to the alpha value mentioned in the paper
+weights = torch.FloatTensor([2, 3.2, 0.7])
+criterion = FocalLoss(gamma=0.7, weights=weights)
+
+# to ignore index 
+criterion = FocalLoss(gamma=0.7, ignore_index=0)
 ```
 
 ## Contributions

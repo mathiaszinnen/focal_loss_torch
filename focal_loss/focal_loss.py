@@ -1,27 +1,90 @@
 import torch
 import torch.nn as nn
-import numpy as np
+from torch.nn.functional import one_hot
+from torch import Tensor
+from typing import Union
 
 
 class FocalLoss(nn.Module):
-    def __init__(self, alpha=1, gamma=2, reduction: str = 'mean'):
+    """Computes the focal loss between input and target
+    as described here https://arxiv.org/abs/1708.02002v2
+
+    Args:
+        gamma (float):  The focal loss focusing parameter.
+        weights (Union[None, Tensor]): Rescaling weight given to each class.
+        If given, has to be a Tensor of size C. optional.
+        reduction (str): Specifies the reduction to apply to the output.
+        it should be one of the following 'none', 'mean', or 'sum'.
+        default 'mean'.
+        ignore_index (int): Specifies a target value that is ignored and
+        does not contribute to the input gradient. optional.
+        eps (float): smoothing to prevent log from returning inf.
+    """
+    def __init__(
+            self,
+            gamma,
+            weights: Union[None, Tensor] = None,
+            reduction: str = 'mean',
+            ignore_index=-100,
+            eps=1e-16
+            ) -> None:
         super().__init__()
         if reduction not in ['mean', 'none', 'sum']:
-            raise NotImplementedError('Reduction {} not implemented.'.format(reduction))
+            raise NotImplementedError(
+                'Reduction {} not implemented.'.format(reduction)
+                )
+        assert weights is None or isinstance(weights, Tensor), \
+            'weights should be of type Tensor or None, but {} given'.format(
+                type(weights))
         self.reduction = reduction
-        self.alpha = alpha
         self.gamma = gamma
+        self.ignore_index = ignore_index
+        self.eps = eps
+        self.weights = weights
 
-    def forward(self, x, target):
-        eps = np.finfo(float).eps
-        p_t = torch.where(target == 1, x, 1-x)
-        fl = - 1 * (1 - p_t) ** self.gamma * torch.log(p_t + eps)
-        fl = torch.where(target == 1, fl * self.alpha, fl * (1 - self.alpha))
-        return self._reduce(fl)
+    def _get_weights(self, target: Tensor) -> Tensor:
+        if self.weights is None:
+            return torch.ones(target.shape[0])
+        weights = target * self.weights
+        return weights.sum(dim=-1)
 
-    def _reduce(self, x):
+    def _process_target(
+            self, target: Tensor, num_classes: int
+            ) -> Tensor:
+        target = target.view(-1)
+        return one_hot(target, num_classes=num_classes)
+
+    def _process_preds(self, x: Tensor) -> Tensor:
+        if x.dim() == 1:
+            x = torch.vstack([1 - x, x])
+            x = x.permute(1, 0)
+            return x
+        return x.view(-1, x.shape[-1])
+
+    def _calc_pt(
+            self, target: Tensor, x: Tensor, mask: Tensor
+            ) -> Tensor:
+        p = target * x
+        p = p.sum(dim=-1)
+        p = p * ~mask
+        return p
+
+    def forward(self, x: Tensor, target: Tensor) -> Tensor:
+        mask = target == self.ignore_index
+        x = self._process_preds(x)
+        num_classes = x.shape[-1]
+        target = self._process_target(target, num_classes)
+        weights = self._get_weights(target).to(x.device)
+        pt = self._calc_pt(target, x, mask)
+        focal = 1 - pt
+        nll = -torch.log(self.eps + pt)
+        nll = nll.masked_fill(mask, 0)
+        loss = weights * (focal ** self.gamma) * nll
+        return self._reduce(loss, mask)
+
+    def _reduce(self, x: Tensor, mask: Tensor) -> Tensor:
         if self.reduction == 'mean':
-            return x.mean()
+            return x.sum() / (~mask).sum()
         elif self.reduction == 'sum':
             return x.sum()
         else:
