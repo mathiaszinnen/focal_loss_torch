@@ -76,6 +76,7 @@ class FocalLoss(nn.Module):
                 classification or softmax for multi-class classification'
         )
         mask = target == self.ignore_index
+        mask = mask.view(-1)
         x = self._process_preds(x)
         num_classes = x.shape[-1]
         target = self._process_target(target, num_classes)
