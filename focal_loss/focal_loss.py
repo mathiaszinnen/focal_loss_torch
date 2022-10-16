@@ -70,6 +70,11 @@ class FocalLoss(nn.Module):
         return p
 
     def forward(self, x: Tensor, target: Tensor) -> Tensor:
+        assert all(0.0 <= x <= 1.0), ValueError(
+            'The predictions values should be between 0 and 1, \
+                make sure to pass the values to sigmoid for binary \
+                classification or softmax for multi-class classification'
+        )
         mask = target == self.ignore_index
         x = self._process_preds(x)
         num_classes = x.shape[-1]
