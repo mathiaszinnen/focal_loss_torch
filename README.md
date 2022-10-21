@@ -21,7 +21,42 @@ criterion = FocalLoss(gamma=0.7, weights=weights)
 
 # to ignore index 
 criterion = FocalLoss(gamma=0.7, ignore_index=0)
+
+# To make it behaves as CrossEntropy loss
+criterion = FocalLoss(gamma=0)
 ```
+
+### Examples
+For Binary-classification
+```python
+batch_size = 10
+m = torch.nn.Sigmoid()
+logits = torch.randn(batch_size)
+target = torch.randint(0, 2, size=(batch_size,))
+loss = criterion(m(logits), target)
+```
+
+For Multi-Class classification
+```python
+batch_size = 10
+n_class = 5
+m = torch.nn.Softmax(dim=-1)
+logits = torch.randn(batch_size, n_class)
+target = torch.randint(0, n_class, size=(batch_size,))
+criterion(m(logits), target)
+```
+
+For Multi-Class Sequence classification
+```python
+batch_size = 10
+max_length = 20
+n_class = 5
+m = torch.nn.Softmax(dim=-1)
+logits = torch.randn(batch_size, max_length, n_class)
+target = torch.randint(0, n_class, size=(batch_size, max_length))
+criterion(m(logits), target)
+```
+
 
 ## Contributions
 Contributions, criticism or corrections are always welcome. 
