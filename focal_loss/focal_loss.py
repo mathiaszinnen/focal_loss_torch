@@ -86,11 +86,11 @@ class FocalLoss(nn.Module):
         nll = -torch.log(self.eps + pt)
         nll = nll.masked_fill(mask, 0)
         loss = weights * (focal ** self.gamma) * nll
-        return self._reduce(loss, mask)
+        return self._reduce(loss, mask, weights)
 
-    def _reduce(self, x: Tensor, mask: Tensor) -> Tensor:
+    def _reduce(self, x: Tensor, mask: Tensor, weights: Tensor) -> Tensor:
         if self.reduction == 'mean':
-            return x.sum() / (~mask).sum()
+            return x.sum() / (~mask * weights).sum()
         elif self.reduction == 'sum':
             return x.sum()
         else:
