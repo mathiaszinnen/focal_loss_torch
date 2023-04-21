@@ -49,8 +49,12 @@ class FocalLoss(nn.Module):
         return weights.sum(dim=-1)
 
     def _process_target(
-            self, target: Tensor, num_classes: int
+            self, target: Tensor, num_classes: int, mask: Tensor
             ) -> Tensor:
+        
+        #convert all ignore_index elements to zero to avoid error in one_hot
+        #note - the choice of value 0 is arbitrary, but it should not matter as these elements will be ignored in the loss calculation
+        target *= ~(target==self.ignore_index) 
         target = target.view(-1)
         return one_hot(target, num_classes=num_classes)
 
@@ -79,7 +83,7 @@ class FocalLoss(nn.Module):
         mask = mask.view(-1)
         x = self._process_preds(x)
         num_classes = x.shape[-1]
-        target = self._process_target(target, num_classes)
+        target = self._process_target(target, num_classes, mask)
         weights = self._get_weights(target).to(x.device)
         pt = self._calc_pt(target, x, mask)
         focal = 1 - pt
