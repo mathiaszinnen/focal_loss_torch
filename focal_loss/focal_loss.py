@@ -54,7 +54,7 @@ class FocalLoss(nn.Module):
         
         #convert all ignore_index elements to zero to avoid error in one_hot
         #note - the choice of value 0 is arbitrary, but it should not matter as these elements will be ignored in the loss calculation
-        target *= ~(target==self.ignore_index) 
+        target = target * ~(target==self.ignore_index) 
         target = target.view(-1)
         return one_hot(target, num_classes=num_classes)
 
