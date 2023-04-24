@@ -8,7 +8,7 @@ README = (HERE / "README.md").read_text()
 setup(
     setup_requires=['wheel'],
     name="focal_loss_torch",
-    version="0.1.1",
+    version="0.1.2",
     description="Simple pytorch implementation of focal loss",
     long_description=README,
     long_description_content_type="text/markdown",
